@@ -17,7 +17,7 @@ const ACCENT = "#FF5722";
 
 const items = [
   { href: routes.map, label: "Map", Icon: MapPin },
-  { href: routes.home, label: "Rankings", Icon: BarChart3 },
+  { href: routes.rankings, label: "Rankings", Icon: BarChart3 },
   { href: routes.hotDeals, label: "Hot deals", Icon: Flame },
   { href: routes.community, label: "Community", Icon: MessageCircle },
   { href: routes.saved, label: "Saved", Icon: Heart },
@@ -45,10 +45,7 @@ export function MobileNav() {
         )}
       >
         {items.map(({ href, label, Icon }) => {
-          const active =
-            href === "/"
-              ? pathname === "/"
-              : pathname === href || pathname.startsWith(`${href}/`);
+          const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}

@@ -1,5 +1,6 @@
 export const routes = {
-  home: "/",
+  /** Ranked list (Top cheap eats). */
+  rankings: "/rankings",
   map: "/map",
   restaurant: (id: string) => `/restaurant/${id}`,
   hotDeals: "/hot-deals",
