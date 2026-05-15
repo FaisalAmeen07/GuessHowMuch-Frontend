@@ -59,7 +59,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-2xl px-2.5 py-1.5 text-[13px] font-semibold leading-none tracking-tight transition-colors max-sm:px-2.5 max-sm:py-1.5 max-sm:text-[13px] sm:px-3 sm:py-2 sm:text-[13px]",
+        "rounded-2xl px-2.5 py-1.5 text-[13px] font-semibold leading-none tracking-tight transition-colors max-sm:px-2.5 max-sm:py-1.5 max-sm:text-[14px] sm:px-3 sm:py-2 sm:text-[13px]",
         active ? "text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)]" : "text-neutral-700 hover:bg-neutral-200/85 hover:text-neutral-800",
       )}
       style={active ? { backgroundColor: ACCENT } : { backgroundColor: CHIP_INACTIVE_BG }}
@@ -138,7 +138,7 @@ function ShowOnlyRow({
       }
     >
       <ShowOnlyRowIcon kind={kind} selected={selected} />
-      <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug tracking-[-0.01em] text-neutral-900 max-sm:font-medium max-sm:text-neutral-800 sm:text-[16px]">
+      <span className="min-w-0 flex-1 font-semibold leading-snug tracking-[-0.01em] text-neutral-900 max-sm:text-[17px] max-sm:font-semibold max-sm:tracking-[-0.02em] sm:text-[16px]">
         {title}
       </span>
       <span className="flex h-5 w-5 shrink-0 items-center justify-center max-sm:h-5 max-sm:w-5" aria-hidden>

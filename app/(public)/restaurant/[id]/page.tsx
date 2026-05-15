@@ -30,7 +30,7 @@ export default async function RestaurantPage({ params }: PageProps) {
     : "Price not yet verified";
 
   return (
-    <div className="min-h-[100dvh] bg-[#faf8f5] pb-28">
+    <div className="min-h-[100dvh] w-full min-w-0 overflow-x-hidden bg-[#faf8f5] pb-28">
       <div className="relative h-48 w-full bg-gradient-to-br from-neutral-200 to-neutral-300">
         <Link
           href={routes.map}
@@ -41,13 +41,15 @@ export default async function RestaurantPage({ params }: PageProps) {
         </Link>
       </div>
 
-      <main className="relative -mt-8 mx-0 w-full max-w-none rounded-t-3xl bg-[#faf8f5] px-4 pb-8 pt-6 sm:mx-auto sm:max-w-lg">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-neutral-900">{r.name}</h1>
+      <main className="relative -mt-8 mx-0 w-full min-w-0 max-w-none rounded-t-3xl bg-[#faf8f5] px-4 pb-8 pt-6 sm:mx-auto sm:max-w-lg sm:px-5">
+        <div className="flex flex-col gap-3 min-[400px]:flex-row min-[400px]:items-start min-[400px]:justify-between min-[400px]:gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="break-words text-2xl font-bold text-neutral-900">{r.name}</h1>
             <p className="mt-1 text-sm text-neutral-600">{r.dish}</p>
           </div>
-          <p className="text-3xl font-bold text-[#FF5722]">{formatPriceCompact(r.price)}</p>
+          <p className="shrink-0 text-3xl font-bold leading-none text-[#FF5722] min-[400px]:text-right">
+            {formatPriceCompact(r.price)}
+          </p>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-neutral-600">

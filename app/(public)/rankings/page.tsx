@@ -10,14 +10,14 @@ export default function RankingsPage() {
   const ranked = [...MOCK_RESTAURANTS].sort((a, b) => b.netScore - a.netScore);
 
   return (
-    <div className="min-h-[100dvh] bg-[#faf8f5] pb-28">
+    <div className="min-h-[100dvh] w-full min-w-0 overflow-x-hidden bg-[#faf8f5] pb-28">
       <header className="sticky top-0 z-10 border-b border-orange-100/60 bg-[#faf8f5]/95 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-start justify-between gap-3">
-          <div className="flex gap-3">
+        <div className="mx-auto flex w-full min-w-0 max-w-lg items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FF5722] text-white">
               <span className="text-lg font-bold">G</span>
             </div>
-            <div>
+            <div className="min-w-0">
               <h1 className="text-lg font-bold leading-tight text-neutral-900">{siteConfig.name}</h1>
               <p className="text-sm text-neutral-500">{siteConfig.tagline}</p>
             </div>
@@ -30,13 +30,13 @@ export default function RankingsPage() {
             <PenLine className="h-5 w-5 text-neutral-700" />
           </Link>
         </div>
-        <div className="mx-auto mt-5 max-w-lg">
+        <div className="mx-auto mt-5 w-full min-w-0 max-w-lg">
           <h2 className="text-2xl font-bold tracking-tight text-neutral-900">Top cheap eats</h2>
           <p className="mt-1 text-sm text-neutral-600">Ranked by the community. No corporate sell-outs.</p>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 pt-4">
+      <main className="mx-auto w-full min-w-0 max-w-lg px-4 pt-4">
         <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
           {["Near me", "CBD", "West End", "Fortitude Valley", "Price checks"].map((label, i) => (
             <button

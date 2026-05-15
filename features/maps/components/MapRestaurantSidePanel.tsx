@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  ArrowLeft,
   Check,
   ChevronDown,
+  ChevronLeft,
   Crown,
   ExternalLink,
   Flag,
@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils/cn";
 
 const ACCENT = "#FF5722";
 /** Above this, distance is treated as unreliable (bad GPS / wrong hemisphere). */
-const MAX_DISPLAY_DISTANCE_KM = 250;
+const MAX_DISPLAY_DISTANCE_KM = 8000;
 
 export type SidePanelAnchor = { topPx: number };
 
@@ -121,11 +121,11 @@ export function MapRestaurantSidePanel({
               >
                 {docked ? (
                   <>
-                    <ArrowLeft className="h-5 w-5 sm:hidden" strokeWidth={2.2} aria-hidden />
+                    <ChevronLeft className="h-5 w-5 sm:hidden" strokeWidth={2.2} aria-hidden />
                     <ChevronDown className="hidden h-5 w-5 sm:block" strokeWidth={2.2} aria-hidden />
                   </>
                 ) : (
-                  <ArrowLeft className="h-5 w-5" strokeWidth={2.2} aria-hidden />
+                  <ChevronLeft className="h-5 w-5" strokeWidth={2.2} aria-hidden />
                 )}
               </button>
               <button
@@ -139,8 +139,8 @@ export function MapRestaurantSidePanel({
           </div>
 
           <div className="bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-6 shadow-[0_-6px_24px_rgba(0,0,0,0.04)] sm:px-5">
-            <div className="flex items-start justify-between gap-3">
-              <h2 className="text-[1.625rem] font-bold leading-[1.15] tracking-[-0.03em] text-neutral-900">
+            <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+              <h2 className="min-w-0 break-words text-[1.625rem] font-bold leading-[1.15] tracking-[-0.03em] text-neutral-900">
                 {r.name}
               </h2>
               <p className="shrink-0 text-[1.75rem] font-bold leading-none" style={{ color: ACCENT }}>
@@ -148,8 +148,8 @@ export function MapRestaurantSidePanel({
               </p>
             </div>
 
-            <div className="mt-2.5 flex items-start justify-between gap-3 text-sm leading-snug">
-              <p className="min-w-0 text-neutral-600">
+            <div className="mt-2.5 flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1 text-sm leading-snug">
+              <p className="min-w-0 max-w-full text-neutral-600 sm:max-w-[min(100%,24rem)]">
                 {r.suburb}
                 {dist ? ` · ${dist}` : ""}
                 <span className="whitespace-nowrap">
@@ -157,7 +157,7 @@ export function MapRestaurantSidePanel({
                   · <span className="text-amber-500">👍</span> +{r.netScore}
                 </span>
               </p>
-              <p className="max-w-[11rem] shrink-0 text-right text-neutral-700">{r.dish}</p>
+              <p className="max-w-full shrink-0 text-right text-neutral-700 sm:max-w-[11rem]">{r.dish}</p>
             </div>
 
             {featured ? (

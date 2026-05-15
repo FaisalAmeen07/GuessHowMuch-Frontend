@@ -40,11 +40,11 @@ export default function RootLayout({
   return (
     <html
       lang="en-AU"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full w-full overflow-x-hidden antialiased`}
       suppressHydrationWarning
     >
       <body
-        className="min-h-full flex flex-col bg-[#faf8f5] font-sans text-neutral-900"
+        className="flex min-h-full w-full min-w-0 flex-col overflow-x-hidden bg-[#faf8f5] font-sans text-neutral-900"
         suppressHydrationWarning
       >
         <QueryProvider>{children}</QueryProvider>

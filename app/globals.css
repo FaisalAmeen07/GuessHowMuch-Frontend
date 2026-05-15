@@ -16,6 +16,12 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  /* Prevent mobile browsers from inflating small text on rotate / zoom */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

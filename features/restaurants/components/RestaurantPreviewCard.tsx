@@ -21,8 +21,8 @@ const THUMB_MAP_COMPACT = cn(
   "size-[5rem] shrink-0 rounded-lg bg-neutral-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] sm:size-[5.5rem]",
 );
 
-/** Skip absurd GPS distances on map peek. */
-const MAX_DISPLAY_DISTANCE_KM = 250;
+/** Hide distance only when clearly bogus (not when user/off-map GPS is far away). */
+const MAX_DISPLAY_DISTANCE_KM = 8000;
 
 const cardShellClass =
   "flex w-full gap-3 rounded-2xl border border-neutral-100/90 bg-white p-3.5 text-left shadow-[0_12px_40px_rgba(0,0,0,0.12)] ring-1 ring-black/[0.04] transition hover:bg-neutral-50/95 active:scale-[0.99]";
@@ -69,7 +69,7 @@ export function RestaurantPreviewCard({
           </span>
         </div>
         <p className="line-clamp-2 text-[13px] leading-snug text-neutral-600">{restaurant.dish}</p>
-        <p className="truncate text-[12px] leading-snug text-neutral-500">
+        <p className="line-clamp-2 min-w-0 break-words text-[12px] leading-snug text-neutral-500">
           {restaurant.suburb}
           {dist ? ` · ${dist}` : ""}
           <span className="whitespace-nowrap">
