@@ -7,13 +7,12 @@ import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import type { LatLng } from "@/features/restaurants/types/restaurant";
 
 import { MapCoordinateMenu } from "@/features/maps/components/MapCoordinateMenu";
-import { MapFitRouteBoundsLeaflet } from "@/features/maps/components/MapFitRouteBounds";
+import { MapFitRouteBoundsLeaflet } from "@/features/maps/components/MapFitRouteBoundsLeaflet";
 import { MapDrivingRouteLeaflet } from "@/features/maps/components/MapDrivingRouteLeaflet";
 import { MapRoutePicker } from "@/features/maps/components/MapRoutePicker";
-import { RestaurantRoutePinLeaflet } from "@/features/maps/components/RestaurantRoutePin";
-import { UserLocationMarkerLeaflet } from "@/features/maps/components/UserLocationMarker";
+import { UserLocationMarkerLeaflet } from "@/features/maps/components/UserLocationMarkerLeaflet";
 import { MapZoomGuard } from "@/features/maps/components/MapZoomGuard";
-import { RouteYouMarkerLeaflet } from "@/features/maps/components/RouteYouMarker";
+import { RouteYouMarkerLeaflet } from "@/features/maps/components/RouteYouMarkerLeaflet";
 import type { DealMapProps } from "@/features/maps/map-types";
 import { useMapCoordinateMenu } from "@/features/maps/hooks/useMapCoordinateMenu";
 import { useRouteSelection } from "@/features/maps/hooks/useRouteSelection";
@@ -157,11 +156,10 @@ export function DealMapLeaflet({
   const icons = useMemo(() => {
     const m = new Map<string, L.DivIcon>();
     for (const r of restaurants) {
-      if (routeActive && r.id === selectedId) continue;
       m.set(r.id, priceTeardropIcon(r, r.id === selectedId));
     }
     return m;
-  }, [restaurants, selectedId, routeActive]);
+  }, [restaurants, selectedId]);
 
   return (
     <div className="relative z-0 flex h-full min-h-0 w-full flex-col bg-[#dcd9d4]">
@@ -220,14 +218,7 @@ export function DealMapLeaflet({
             }}
           />
         )}
-        {routeActive && selectedId && routeTo && (
-          <RestaurantRoutePinLeaflet
-            position={routeTo}
-            onClick={() => onSelect(selectedId)}
-          />
-        )}
         {restaurants.map((r) => {
-          if (routeActive && r.id === selectedId) return null;
           return (
             <Marker
               key={`${r.id}-${selectedId === r.id ? "1" : "0"}`}

@@ -13,10 +13,9 @@ import { env } from "@/config/env";
 import { MapCoordinateMenu } from "@/features/maps/components/MapCoordinateMenu";
 import { MapDrivingRouteGoogle } from "@/features/maps/components/MapDrivingRouteGoogle";
 import { MapRoutePicker } from "@/features/maps/components/MapRoutePicker";
-import { RestaurantRoutePinGoogle } from "@/features/maps/components/RestaurantRoutePin";
-import { MapFitRouteBoundsGoogle } from "@/features/maps/components/MapFitRouteBounds";
-import { RouteYouMarkerGoogle } from "@/features/maps/components/RouteYouMarker";
-import { UserLocationMarkerGoogle } from "@/features/maps/components/UserLocationMarker";
+import { MapFitRouteBoundsGoogle } from "@/features/maps/components/MapFitRouteBoundsGoogle";
+import { RouteYouMarkerGoogle } from "@/features/maps/components/RouteYouMarkerGoogle";
+import { UserLocationMarkerGoogle } from "@/features/maps/components/UserLocationMarkerGoogle";
 import type { DealMapProps } from "@/features/maps/map-types";
 import { useMapCoordinateMenu } from "@/features/maps/hooks/useMapCoordinateMenu";
 import { useRouteSelection } from "@/features/maps/hooks/useRouteSelection";
@@ -235,21 +234,12 @@ export function DealMapGoogle({
         )}
         {restaurants.map((r) => {
           const selected = r.id === selectedId;
-          if (routeActive && selected) {
-            return (
-              <RestaurantRoutePinGoogle
-                key={r.id}
-                position={r.position}
-                onClick={() => onSelect(r.id)}
-              />
-            );
-          }
           return (
             <PriceMarker
               key={r.id}
               restaurant={r}
               selected={selected}
-              showRouteLabels={false}
+              showRouteLabels={routeActive && selected}
               onSelect={onSelect}
             />
           );

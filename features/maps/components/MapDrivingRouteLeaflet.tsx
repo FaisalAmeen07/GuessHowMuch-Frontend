@@ -57,25 +57,40 @@ export function MapDrivingRouteLeaflet({
 
   if (!options.length) return null;
 
+  const unselected = options.filter((_, i) => i !== selectedIndex);
+  const selected = options[selectedIndex];
+
   return (
     <>
-      {options.map((opt, i) => {
+      {unselected.map((opt) => {
         if (!opt.path.length) return null;
-        const selected = i === selectedIndex;
         return (
           <Polyline
             key={opt.id}
             positions={toPositions(opt.path)}
             pathOptions={{
-              color: selected ? ROUTE_SELECTED_COLOR : ROUTE_UNSELECTED_COLOR,
-              weight: selected ? ROUTE_SELECTED_WEIGHT : ROUTE_UNSELECTED_WEIGHT,
-              opacity: selected ? 1 : 0.85,
+              color: ROUTE_UNSELECTED_COLOR,
+              weight: ROUTE_UNSELECTED_WEIGHT,
+              opacity: 0.75,
               lineCap: "round",
               lineJoin: "round",
             }}
           />
         );
       })}
+      {selected?.path.length ? (
+        <Polyline
+          key={selected.id}
+          positions={toPositions(selected.path)}
+          pathOptions={{
+            color: ROUTE_SELECTED_COLOR,
+            weight: ROUTE_SELECTED_WEIGHT,
+            opacity: 1,
+            lineCap: "round",
+            lineJoin: "round",
+          }}
+        />
+      ) : null}
       {selectedConnectors.originConnector && (
         <DottedConnector path={selectedConnectors.originConnector} />
       )}

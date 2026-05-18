@@ -27,7 +27,7 @@ function dottedLine(path: LatLng[]): google.maps.PolylineOptions {
   return {
     path,
     strokeOpacity: 0,
-    zIndex: 3,
+    zIndex: 11,
     icons: [
       {
         icon: {
@@ -65,20 +65,25 @@ export function MapDrivingRouteGoogle({
 
     const lines: google.maps.Polyline[] = [];
 
-    options.forEach((opt, i) => {
+    const addRouteLine = (opt: RouteOption, selected: boolean) => {
       if (!opt.path.length) return;
-      const selected = i === selectedIndex;
-
       const line = new google.maps.Polyline({
         path: opt.path,
         strokeColor: selected ? ROUTE_SELECTED_COLOR : ROUTE_UNSELECTED_COLOR,
-        strokeOpacity: selected ? 1 : 0.85,
+        strokeOpacity: selected ? 1 : 0.75,
         strokeWeight: selected ? ROUTE_SELECTED_WEIGHT : ROUTE_UNSELECTED_WEIGHT,
-        zIndex: selected ? 2 : 1,
+        zIndex: selected ? 10 : 1,
       });
       line.setMap(map);
       lines.push(line);
+    };
+
+    // Grey alternates first, then blue active route on top (shared segments stay blue).
+    options.forEach((opt, i) => {
+      if (i !== selectedIndex) addRouteLine(opt, false);
     });
+    const selectedOpt = options[selectedIndex];
+    if (selectedOpt) addRouteLine(selectedOpt, true);
 
     const addConnector = (connector: LatLng[] | null) => {
       if (!connector || connector.length < 2) return;
