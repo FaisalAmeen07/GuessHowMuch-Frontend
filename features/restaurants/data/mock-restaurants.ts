@@ -22,6 +22,14 @@ export const MOCK_RESTAURANTS: Restaurant[] = [
         ago: "3d",
         body: "Portion is huge for $8. Add a side of spring rolls for $3 and you're set.",
         likes: 32,
+        replies: [
+          {
+            author: "Sarah",
+            ago: "2d",
+            body: "Agreed — the lunch combo is the move.",
+            likes: 5,
+          },
+        ],
       },
       {
         author: "John",

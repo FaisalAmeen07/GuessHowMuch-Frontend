@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  ClipboardList,
   Flame,
   Heart,
   MapPin,
@@ -11,11 +12,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { routes } from "@/config/routes";
+import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils/cn";
 
 const ACCENT = "#FF5722";
 
-const items = [
+const baseItems = [
   { href: routes.map, label: "Map", Icon: MapPin },
   { href: routes.rankings, label: "Rankings", Icon: BarChart3 },
   { href: routes.hotDeals, label: "Hot deals", Icon: Flame },
@@ -25,6 +27,11 @@ const items = [
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { isAdmin } = useAuth();
+
+  const items = isAdmin
+    ? [...baseItems, { href: routes.submissions, label: "Queue", Icon: ClipboardList }]
+    : [...baseItems];
 
   return (
     <nav
@@ -38,9 +45,7 @@ export function MobileNav() {
       <div
         className={cn(
           "flex w-full min-w-0 items-stretch justify-between gap-0.5",
-          /* Mobile: full-width tab bar, icons only (labels via aria-label on links) */
           "max-sm:max-w-none max-sm:border-x-0 max-sm:border-b-0 max-sm:border-t max-sm:border-neutral-200/90 max-sm:bg-white max-sm:px-1 max-sm:pb-[env(safe-area-inset-bottom)] max-sm:pt-2 max-sm:shadow-[0_-6px_20px_rgba(0,0,0,0.06)] max-sm:backdrop-blur-none max-sm:pl-[max(0.25rem,env(safe-area-inset-left))] max-sm:pr-[max(0.25rem,env(safe-area-inset-right))]",
-          /* sm+: unchanged floating pill */
           "sm:max-w-[min(28rem,calc(100vw-env(safe-area-inset-left)-env(safe-area-inset-right)-1.5rem))] sm:rounded-2xl sm:border sm:border-white/90 sm:bg-white/98 sm:px-2 sm:pb-[env(safe-area-inset-bottom)] sm:pt-2.5 sm:shadow-[0_10px_40px_rgba(0,0,0,0.12)] sm:backdrop-blur-md sm:gap-1",
         )}
       >

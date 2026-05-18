@@ -73,6 +73,16 @@ function MapCoordinateLayer({
   return null;
 }
 
+function MapBackgroundClick({ onMapClick }: { onMapClick?: () => void }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!map || !onMapClick) return;
+    const listener = map.addListener("click", () => onMapClick());
+    return () => google.maps.event.removeListener(listener);
+  }, [map, onMapClick]);
+  return null;
+}
+
 function MapFlyToSearch({ target }: { target: google.maps.LatLngLiteral | null | undefined }) {
   const map = useMap();
   useEffect(() => {
@@ -160,6 +170,7 @@ export function DealMapGoogle({
   onSelect,
   flyTo,
   routeFrom,
+  onMapClick,
 }: DealMapProps) {
   const center = mapCameraCenter(userCoords);
   const mapId = env.googleMapId.trim() || undefined;
@@ -205,6 +216,7 @@ export function DealMapGoogle({
       >
         {!routeActive && <MapFlyToSearch target={flyTo ?? null} />}
         <RecenterOnUser coords={userCoords} flyTo={flyTo} />
+        <MapBackgroundClick onMapClick={onMapClick} />
         <MapCoordinateLayer onOpen={openAt} />
         <MapDrivingRouteGoogle
           options={routeOptions}

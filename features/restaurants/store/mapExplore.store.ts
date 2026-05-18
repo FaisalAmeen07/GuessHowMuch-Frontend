@@ -158,6 +158,12 @@ function applyShowOnlyFilter(list: Restaurant[], mode: ShowOnlyFeedsId): Restaur
   return list.filter((r) => r.netScore >= 50);
 }
 
+export function matchRestaurantsBySearchQuery(list: Restaurant[], searchQuery: string): Restaurant[] {
+  const q = searchQuery.trim();
+  if (!q) return [];
+  return list.filter((r) => matchesSearch(r, searchQuery));
+}
+
 export function filterRestaurants(
   list: Restaurant[],
   activePriceFilter: PriceFilterId,

@@ -19,7 +19,7 @@ const CUISINE_OPTIONS: { id: Exclude<CuisineFilterId, "all">; label: string }[] 
 ];
 
 const fieldClass =
-  "w-full rounded-2xl border-0 bg-orange-50/70 px-4 py-3 text-sm text-neutral-900 outline-none ring-0 transition placeholder:text-neutral-400 focus:bg-orange-50 focus:ring-2 focus:ring-[#FF5722]/25";
+  "w-full rounded-2xl border-0 bg-orange-100/95 px-4 py-3 text-sm text-neutral-900 outline-none ring-0 transition placeholder:text-neutral-500 focus:bg-orange-100 focus:ring-2 focus:ring-[#FF5722]/25";
 
 const labelClass =
   "mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500";
@@ -30,6 +30,23 @@ function RequiredMark() {
       *
     </span>
   );
+}
+
+function toDateTimeMs(date: string, time: string) {
+  if (!date) return NaN;
+  const t = time || "23:59";
+  return new Date(`${date}T${t}`).getTime();
+}
+
+function formatEndCountdown(msRemaining: number) {
+  if (!Number.isFinite(msRemaining) || msRemaining <= 0) return "Ended";
+  const totalMinutes = Math.floor(msRemaining / 60_000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0) return `Ends in ${hours}h ${minutes}m`;
+  const seconds = Math.floor((msRemaining % 60_000) / 1000);
+  if (minutes > 0) return `Ends in ${minutes}m ${seconds}s`;
+  return `Ends in ${seconds}s`;
 }
 
 export type DropFeedModalProps = {
@@ -45,6 +62,13 @@ export function DropFeedModal({ open, onClose }: DropFeedModalProps) {
   const [price, setPrice] = useState("");
   const [dish, setDish] = useState("");
   const [cuisine, setCuisine] = useState<Exclude<CuisineFilterId, "all">>("vietnamese");
+  const [dealTimerEnabled, setDealTimerEnabled] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [dealDescription, setDealDescription] = useState("");
+  const [countdownLabel, setCountdownLabel] = useState("");
   const [photoName, setPhotoName] = useState<string | null>(null);
 
   useEffect(() => {
@@ -72,10 +96,33 @@ export function DropFeedModal({ open, onClose }: DropFeedModalProps) {
       setPrice("");
       setDish("");
       setCuisine("vietnamese");
+      setDealTimerEnabled(false);
+      setStartDate("");
+      setStartTime("");
+      setEndDate("");
+      setEndTime("");
+      setDealDescription("");
+      setCountdownLabel("");
       setPhotoName(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!dealTimerEnabled || !endDate) {
+      setCountdownLabel("");
+      return;
+    }
+
+    const tick = () => {
+      const endMs = toDateTimeMs(endDate, endTime);
+      setCountdownLabel(formatEndCountdown(endMs - Date.now()));
+    };
+
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [dealTimerEnabled, endDate, endTime]);
 
   if (!open) return null;
 
@@ -88,6 +135,17 @@ export function DropFeedModal({ open, onClose }: DropFeedModalProps) {
       price,
       dish,
       cuisine,
+      dealTimerEnabled,
+      ...(dealTimerEnabled
+        ? {
+            startDate,
+            startTime: startTime || "00:00",
+            endDate,
+            endTime: endTime || "23:59",
+            dealDescription: dealDescription.trim(),
+            countdown: countdownLabel,
+          }
+        : {}),
       photo: photoName,
     });
     onClose();
@@ -247,6 +305,135 @@ export function DropFeedModal({ open, onClose }: DropFeedModalProps) {
             </div>
 
             <div>
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-orange-50/70 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-neutral-900">Hot Deal</p>
+                  <p className="text-xs text-neutral-500">
+                    {dealTimerEnabled ? "Set times & description below" : "Disabled"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={dealTimerEnabled}
+                  onClick={() => setDealTimerEnabled((v) => !v)}
+                  className={cn(
+                    "relative h-7 w-12 shrink-0 rounded-full transition-colors",
+                    dealTimerEnabled ? "bg-[#FF5722]" : "bg-neutral-300",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform",
+                      dealTimerEnabled && "translate-x-5",
+                    )}
+                    aria-hidden
+                  />
+                  <span className="sr-only">{dealTimerEnabled ? "Disable deal timer" : "Enable deal timer"}</span>
+                </button>
+              </div>
+
+              {dealTimerEnabled ? (
+                <div className="mt-3 space-y-3 rounded-2xl border border-orange-200/60 bg-orange-50/40 p-3.5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="min-w-0">
+                      <label htmlFor="drop-start-date" className={labelClass}>
+                        Start date
+                        <RequiredMark />
+                      </label>
+                      <input
+                        id="drop-start-date"
+                        name="startDate"
+                        type="date"
+                        value={startDate}
+                        min={new Date().toISOString().slice(0, 10)}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className={fieldClass}
+                        required={dealTimerEnabled}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <label htmlFor="drop-end-date" className={labelClass}>
+                        End date
+                        <RequiredMark />
+                      </label>
+                      <input
+                        id="drop-end-date"
+                        name="endDate"
+                        type="date"
+                        value={endDate}
+                        min={startDate || new Date().toISOString().slice(0, 10)}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className={fieldClass}
+                        required={dealTimerEnabled}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="min-w-0">
+                      <label htmlFor="drop-start-time" className={labelClass}>
+                        Start time
+                        <RequiredMark />
+                      </label>
+                      <input
+                        id="drop-start-time"
+                        name="startTime"
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className={fieldClass}
+                        required={dealTimerEnabled}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <label htmlFor="drop-end-time" className={labelClass}>
+                        End time
+                        <RequiredMark />
+                      </label>
+                      <input
+                        id="drop-end-time"
+                        name="endTime"
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        className={fieldClass}
+                        required={dealTimerEnabled}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="drop-deal-description" className={labelClass}>
+                      Description
+                      <RequiredMark />
+                    </label>
+                    <textarea
+                      id="drop-deal-description"
+                      name="dealDescription"
+                      rows={3}
+                      placeholder="e.g. Lunch special before 11:30 — cash only at the counter."
+                      value={dealDescription}
+                      onChange={(e) => setDealDescription(e.target.value)}
+                      className={cn(fieldClass, "resize-none leading-snug")}
+                      required={dealTimerEnabled}
+                    />
+                  </div>
+                  {endDate ? (
+                    <div className="flex justify-center pt-1">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white">
+                        <span
+                          className="h-1.5 w-1.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: ACCENT }}
+                          aria-hidden
+                        />
+                        {countdownLabel || "Set end date & time"}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
+            <div>
               <label htmlFor="drop-photo" className={labelClass}>
                 Photo
                 <RequiredMark />
@@ -267,7 +454,7 @@ export function DropFeedModal({ open, onClose }: DropFeedModalProps) {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className={cn(
-                  "flex min-h-[8.5rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-neutral-200/90 bg-orange-50/40 px-4 py-6 text-sm text-neutral-500 transition hover:border-neutral-300 hover:bg-orange-50/70",
+                  "flex min-h-[8.5rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-neutral-200/90 bg-orange-100/60 px-4 py-6 text-sm text-neutral-500 transition hover:border-neutral-300 hover:bg-orange-100/90",
                 )}
               >
                 <Camera className="h-8 w-8 text-neutral-400" strokeWidth={1.5} />

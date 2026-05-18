@@ -2,7 +2,7 @@
 
 import L from "leaflet";
 import { useEffect, useMemo } from "react";
-import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
 import type { LatLng } from "@/features/restaurants/types/restaurant";
 
@@ -122,6 +122,15 @@ function MapFlyTo({ target }: { target: LatLng | null | undefined }) {
   return null;
 }
 
+function MapBackgroundClick({ onMapClick }: { onMapClick?: () => void }) {
+  useMapEvents({
+    click() {
+      onMapClick?.();
+    },
+  });
+  return null;
+}
+
 export function DealMapLeaflet({
   restaurants,
   userCoords,
@@ -129,6 +138,7 @@ export function DealMapLeaflet({
   onSelect,
   flyTo,
   routeFrom,
+  onMapClick,
 }: DealMapProps) {
   const mapCenter = mapCameraCenter(userCoords);
   const center: [number, number] = [mapCenter.lat, mapCenter.lng];
@@ -187,6 +197,7 @@ export function DealMapLeaflet({
         />
         <MapZoomGuard />
         {!routeActive && <MapFlyTo target={flyTo} />}
+        <MapBackgroundClick onMapClick={onMapClick} />
         <MapCoordinateLayer onOpen={openAt} />
         <MapDrivingRouteLeaflet
           options={routeOptions}

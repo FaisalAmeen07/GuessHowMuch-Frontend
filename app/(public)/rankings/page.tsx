@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { MapPin, PenLine, ThumbsUp } from "lucide-react";
+import { MapPin, ThumbsUp } from "lucide-react";
 
+import { DropFeedPenButton } from "@/components/layout/DropFeedPenButton";
+import { PUBLIC_PAGE_HEADER_PT } from "@/components/layout/PublicListPageShell";
 import { siteConfig } from "@/config/site";
 import { routes } from "@/config/routes";
 import { MOCK_RESTAURANTS } from "@/features/restaurants/data/mock-restaurants";
@@ -34,7 +36,8 @@ export default function RankingsPage() {
       <header
         className={cn(
           "sticky top-0 z-10 backdrop-blur-md",
-          "bg-[#fff9f2]/95 pt-[max(1rem,env(safe-area-inset-top))]",
+          "bg-[#fff9f2]/95",
+          PUBLIC_PAGE_HEADER_PT,
         )}
       >
         <div className="mx-auto flex w-full min-w-0 max-w-xl items-start justify-between gap-3 px-4 sm:px-5">
@@ -50,13 +53,7 @@ export default function RankingsPage() {
               <p className="text-xs text-neutral-500 sm:text-sm">{siteConfig.tagline}</p>
             </div>
           </div>
-          <Link
-            href={routes.map}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-neutral-200/90 bg-white shadow-sm transition hover:bg-neutral-50"
-            aria-label="Drop a find on the map"
-          >
-            <PenLine className="h-5 w-5 text-neutral-700" />
-          </Link>
+          <DropFeedPenButton />
         </div>
         <div className="mx-auto mt-5 w-full min-w-0 max-w-xl px-4 sm:mt-6 sm:px-5">
           <h2 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-[1.65rem]">Top cheap eats</h2>

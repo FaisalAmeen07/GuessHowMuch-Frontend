@@ -6,5 +6,7 @@ export const routes = {
   hotDeals: "/hot-deals",
   community: "/community",
   saved: "/saved",
+  profile: "/profile",
+  submissions: "/submissions",
   login: "/login",
 } as const;

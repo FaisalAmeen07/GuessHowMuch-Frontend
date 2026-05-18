@@ -13,11 +13,19 @@ export type ShowOnlyFeedsId = "all" | "hot" | "verified" | "top50";
 
 export type LatLng = { lat: number; lng: number };
 
+export type RestaurantCommunityNoteReply = {
+  author: string;
+  ago: string;
+  body: string;
+  likes: number;
+};
+
 export type RestaurantCommunityNote = {
   author: string;
   ago: string;
   body: string;
   likes: number;
+  replies?: RestaurantCommunityNoteReply[];
 };
 
 export type Restaurant = {

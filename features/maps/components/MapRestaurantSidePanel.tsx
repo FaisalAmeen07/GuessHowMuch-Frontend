@@ -15,6 +15,7 @@ import {
 import { useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { RestaurantCommunityNotesSection } from "@/features/restaurants/components/RestaurantCommunityNotesSection";
 import { RestaurantImage } from "@/features/restaurants/components/RestaurantImage";
 import type { RestaurantWithDistance } from "@/features/restaurants/types/restaurant";
 import { formatDistanceKm } from "@/features/restaurants/utils/distance";
@@ -221,37 +222,10 @@ export function MapRestaurantSidePanel({
               </a>
             </div>
 
-            {r.communityNotes && r.communityNotes.length > 0 ? (
-              <section className="mt-6">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-500">
-                  Community notes
-                </p>
-                <ul className="mt-3 space-y-5">
-                  {r.communityNotes.map((note) => (
-                    <li key={`${note.author}-${note.ago}`} className="flex gap-3">
-                      <span
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                        style={{ backgroundColor: ACCENT }}
-                        aria-hidden
-                      >
-                        {note.author.slice(0, 1)}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-neutral-900">
-                          {note.author}
-                          <span className="font-normal text-neutral-500"> · {note.ago}</span>
-                        </p>
-                        <p className="mt-1 text-sm leading-relaxed text-neutral-700">{note.body}</p>
-                        <p className="mt-2 flex items-center gap-1 text-xs text-neutral-500">
-                          <ThumbsUp className="h-3.5 w-3.5 text-neutral-400" aria-hidden />
-                          {note.likes}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
+            <RestaurantCommunityNotesSection
+              restaurantId={r.id}
+              initialNotes={r.communityNotes ?? []}
+            />
 
             <button
               type="button"
