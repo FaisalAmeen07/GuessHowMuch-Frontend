@@ -154,7 +154,7 @@ export function DropFeedModal({ open, onClose }: DropFeedModalProps) {
     return () => window.clearInterval(id);
   }, [dealTimerEnabled, endDate, endTime]);
 
-  if (!open) return null;
+  if (!open) return null; 
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
