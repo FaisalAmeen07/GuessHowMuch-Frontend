@@ -98,6 +98,7 @@ export function MapExploreScreen() {
   } = useNearbyRestaurants(nearbySearchCenter, {
     priceFilterId: activePriceFilter,
     cuisineId: activeCuisine,
+    showOnlyFeeds,
   });
 
   useEffect(() => {
@@ -294,6 +295,7 @@ export function MapExploreScreen() {
         searchLocation,
         activeCuisine,
         showOnlyFeeds,
+        showOnlyFeeds !== "all",
       ),
     [
       nearbyRestaurants,
@@ -542,6 +544,7 @@ export function MapExploreScreen() {
               flyTo={flyTo}
               routeFrom={selectedRestaurantId ? distanceOrigin : null}
               onMapClick={handleMapClick}
+              simpleMapPins={activePriceFilter === "top"}
             />
           ) : (
             <MapLoadingSkeleton />

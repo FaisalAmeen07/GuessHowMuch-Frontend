@@ -1,7 +1,14 @@
 import { create } from "zustand";
 
 import { LOCATION_SEARCH_ALIASES } from "@/constants/locationAliases";
-import { SEARCH_LOCATION_RADIUS_KM, TOP_RATED_MIN_NET_SCORE } from "@/constants/limits";
+import {
+  SEARCH_LOCATION_RADIUS_KM,
+  TOP_RATED_CHIP_MIN_NET_SCORE,
+} from "@/constants/limits";
+import {
+  filterRestaurantsToTopRatedLeaderboard,
+  getTopRatedRestaurantIdSet,
+} from "@/lib/rankings/topRatedRankingStorage";
 import type {
   CuisineFilterId,
   LatLng,
@@ -115,8 +122,15 @@ function unionById(a: Restaurant[], b: Restaurant[]): Restaurant[] {
 
 function applyPriceFilter(list: Restaurant[], activePriceFilter: PriceFilterId): Restaurant[] {
   switch (activePriceFilter) {
-    case "top":
-      return list.filter((r) => r.isTopRated || r.netScore >= TOP_RATED_MIN_NET_SCORE);
+    case "top": {
+      const topIds = getTopRatedRestaurantIdSet();
+      if (topIds.size > 0) {
+        return filterRestaurantsToTopRatedLeaderboard(list, topIds);
+      }
+      return list.filter(
+        (r) => r.isTopRated || r.netScore >= TOP_RATED_CHIP_MIN_NET_SCORE,
+      );
+    }
     case "u15":
       return list.filter((r) => r.price <= 15);
     case "u12":
@@ -155,7 +169,8 @@ function applyShowOnlyFilter(list: Restaurant[], mode: ShowOnlyFeedsId): Restaur
     const cutoff = Date.now() - 30 * 86400000;
     return list.filter((r) => r.priceVerifiedAt && new Date(r.priceVerifiedAt).getTime() >= cutoff);
   }
-  return list.filter((r) => r.netScore >= 50);
+  const topIds = getTopRatedRestaurantIdSet();
+  return filterRestaurantsToTopRatedLeaderboard(list, topIds);
 }
 
 export function matchRestaurantsBySearchQuery(list: Restaurant[], searchQuery: string): Restaurant[] {
@@ -171,12 +186,15 @@ export function filterRestaurants(
   searchLocation: SearchLocationHit | null,
   activeCuisine: CuisineFilterId = "all",
   showOnlyFeeds: ShowOnlyFeedsId = "all",
+  /** When true, SHOW ONLY was applied via `/api/listings/filter` — skip client re-filter. */
+  showOnlyHandledByApi = false,
 ): Restaurant[] {
   const priceFromApi =
     activePriceFilter === "u15" ||
     activePriceFilter === "u12" ||
     activePriceFilter === "u8" ||
-    activePriceFilter === "u5";
+    activePriceFilter === "u5" ||
+    activePriceFilter === "top";
   const cuisineFromApi = activeCuisine !== "all" && priceFromApi;
 
   let next = priceFromApi ? list : applyPriceFilter(list, activePriceFilter);
@@ -184,7 +202,11 @@ export function filterRestaurants(
     activeCuisine === "all" || cuisineFromApi
       ? next
       : applyCuisineFilter(next, activeCuisine);
-  next = applyShowOnlyFilter(next, showOnlyFeeds);
+  if (showOnlyFeeds === "hotDeals" || showOnlyFeeds === "top50") {
+    next = applyShowOnlyFilter(next, showOnlyFeeds);
+  } else if (!showOnlyHandledByApi && showOnlyFeeds !== "all") {
+    next = applyShowOnlyFilter(next, showOnlyFeeds);
+  }
   const q = searchQuery.trim();
   const center: LatLng | null = searchLocation
     ? { lat: searchLocation.lat, lng: searchLocation.lng }

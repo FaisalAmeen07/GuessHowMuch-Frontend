@@ -98,16 +98,18 @@ function PriceMarker({
   restaurant,
   selected,
   showRouteLabels,
+  simpleMapPins,
   onSelect,
 }: {
   restaurant: DealMapProps["restaurants"][number];
   selected: boolean;
   showRouteLabels: boolean;
+  simpleMapPins: boolean;
   onSelect: DealMapProps["onSelect"];
 }) {
-  const { price, isHotDeal, isTopRated, isFeatured, id } = restaurant;
+  const { price, isHotDeal, isFeatured, id } = restaurant;
   const label = formatPriceCompact(price);
-  const isFeaturedPin = Boolean(isFeatured) || Boolean(isTopRated);
+  const isFeaturedPin = Boolean(isFeatured) && !simpleMapPins;
 
   const tailFill = isFeaturedPin ? "#171717" : selected ? "#E53935" : "#FF5722";
 
@@ -170,6 +172,7 @@ export function DealMapGoogle({
   flyTo,
   routeFrom,
   onMapClick,
+  simpleMapPins = false,
 }: DealMapProps) {
   const center = mapCameraCenter(userCoords);
   const mapId = env.googleMapId.trim() || undefined;
@@ -251,6 +254,7 @@ export function DealMapGoogle({
               restaurant={r}
               selected={selected}
               showRouteLabels={routeActive && selected}
+              simpleMapPins={simpleMapPins}
               onSelect={onSelect}
             />
           );

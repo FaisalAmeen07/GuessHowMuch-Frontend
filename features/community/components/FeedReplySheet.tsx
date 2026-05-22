@@ -99,7 +99,7 @@ export function FeedReplySheet({ open, onClose, post, onCommentPosted }: FeedRep
     setSubmitting(true);
     try {
       const res = await createCommunityPostComment(postId, text);
-      const mapped = mapApiCommunityComment(res.data, session?.nickname);
+      const mapped = mapApiCommunityComment(res.data);
       queryClient.setQueryData<FeedPostComment[]>(
         ["community-post-comments", postId],
         (prev) => [...(prev ?? []), mapped],

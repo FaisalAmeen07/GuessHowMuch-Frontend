@@ -43,6 +43,8 @@ export type Restaurant = {
   imageUrl?: string | null;
   position: LatLng;
   netScore: number;
+  /** Total community votes (up + down) — Top rated filter. */
+  voteCount?: number;
   worthIt: number;
   overrated: number;
   isHotDeal?: boolean;

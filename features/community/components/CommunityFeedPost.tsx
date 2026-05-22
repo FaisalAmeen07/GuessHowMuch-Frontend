@@ -12,6 +12,7 @@ type CommunityFeedPostProps = {
   likedByMe: boolean;
   liking: boolean;
   isSignedIn: boolean;
+  canEdit?: boolean;
   onLike: () => void;
   onCommentsOpen: () => void;
   onEditOpen: () => void;
@@ -22,6 +23,7 @@ export function CommunityFeedPost({
   likedByMe,
   liking,
   isSignedIn,
+  canEdit = false,
   onLike,
   onCommentsOpen,
   onEditOpen,
@@ -47,24 +49,31 @@ export function CommunityFeedPost({
           {post.initial}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-neutral-500">
+          <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-neutral-500">
             <span className="font-semibold text-neutral-800">{post.author}</span>
-            <span aria-hidden> · </span>
+            {post.isAdminAuthor ? (
+              <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-600">
+                Admin
+              </span>
+            ) : null}
+            <span aria-hidden>·</span>
             <span>{post.ago}</span>
           </p>
           <div className="mt-1.5 flex items-start justify-between gap-2">
             <h3 className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-neutral-900 sm:text-base">
               {post.title}
             </h3>
-            <button
-              type="button"
-              onClick={onEditOpen}
-              className="mt-[-2px] inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-700"
-              aria-label={`Edit · ${post.title}`}
-              title="Edit"
-            >
-              <Ellipsis className="h-5 w-5" aria-hidden />
-            </button>
+            {canEdit ? (
+              <button
+                type="button"
+                onClick={onEditOpen}
+                className="mt-[-2px] inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-700"
+                aria-label={`Edit · ${post.title}`}
+                title="Edit"
+              >
+                <Ellipsis className="h-5 w-5" aria-hidden />
+              </button>
+            ) : null}
           </div>
           <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">{post.body}</p>
 

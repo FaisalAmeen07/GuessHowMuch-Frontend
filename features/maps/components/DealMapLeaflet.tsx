@@ -32,9 +32,10 @@ const ACCENT = "#FF5722";
 function priceTeardropIcon(
   restaurant: DealMapProps["restaurants"][number],
   selected: boolean,
+  simpleMapPins: boolean,
 ): L.DivIcon {
   const label = formatPriceCompact(restaurant.price);
-  const featuredPin = Boolean(restaurant.isFeatured) || Boolean(restaurant.isTopRated);
+  const featuredPin = Boolean(restaurant.isFeatured) && !simpleMapPins;
   const hot = restaurant.isHotDeal && !selected && !featuredPin;
 
   const fill = featuredPin ? "#171717" : selected ? "#E53935" : ACCENT;
@@ -136,6 +137,7 @@ export function DealMapLeaflet({
   flyTo,
   routeFrom,
   onMapClick,
+  simpleMapPins = false,
 }: DealMapProps) {
   const mapCenter = mapCameraCenter(userCoords);
   const center: [number, number] = [mapCenter.lat, mapCenter.lng];
@@ -163,10 +165,10 @@ export function DealMapLeaflet({
   const icons = useMemo(() => {
     const m = new Map<string, L.DivIcon>();
     for (const r of restaurants) {
-      m.set(r.id, priceTeardropIcon(r, r.id === selectedId));
+      m.set(r.id, priceTeardropIcon(r, r.id === selectedId, simpleMapPins));
     }
     return m;
-  }, [restaurants, selectedId]);
+  }, [restaurants, selectedId, simpleMapPins]);
 
   return (
     <div className="relative z-0 flex h-full min-h-0 w-full flex-col bg-[#dcd9d4]">
@@ -236,7 +238,7 @@ export function DealMapLeaflet({
               icon={icons.get(r.id) ?? priceTeardropIcon(r, selectedId === r.id)}
               eventHandlers={{ click: () => onSelect(r.id) }}
               zIndexOffset={
-                selectedId === r.id ? 800 : r.isFeatured || r.isTopRated ? 400 : 0
+                selectedId === r.id ? 800 : r.isFeatured && !simpleMapPins ? 400 : 0
               }
             />
           );

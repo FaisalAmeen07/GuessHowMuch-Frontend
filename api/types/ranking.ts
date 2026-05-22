@@ -62,6 +62,11 @@ export type GetRestaurantRankingsResponse = {
   data: RankedRestaurantRow[];
 };
 
+export type GetRestaurantPopularityResponse = {
+  success: boolean;
+  data: RankedRestaurantRow;
+};
+
 export type RankedSuburbRow = {
   rank: number;
   suburb: string;

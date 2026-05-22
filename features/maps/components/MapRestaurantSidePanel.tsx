@@ -14,7 +14,7 @@ import { createPortal } from "react-dom";
 
 import { useSavedPlace } from "@/features/maps/hooks/useSavedPlace";
 import { FlagOutdatedReport } from "@/features/restaurants/components/FlagOutdatedReport";
-import { MealVoteCardsUI } from "@/features/restaurants/components/MealVoteCards";
+import { MealVoteCards } from "@/features/restaurants/components/MealVoteCards";
 import { useMealVotes } from "@/features/restaurants/hooks/useMealVotes";
 import { RestaurantCommunityNotesSection } from "@/features/restaurants/components/RestaurantCommunityNotesSection";
 import { RestaurantImage } from "@/features/restaurants/components/RestaurantImage";
@@ -196,7 +196,16 @@ export function MapRestaurantSidePanel({
             </p>
 
             {Number.isFinite(mealId) ? (
-              <MealVoteCardsUI vote={mealVotes} variant="panel" className="mt-4" />
+              <MealVoteCards
+                mealId={mealId}
+                restaurantId={
+                  r.restaurantId != null
+                    ? Number.parseInt(String(r.restaurantId), 10) || undefined
+                    : undefined
+                }
+                variant="panel"
+                className="mt-4"
+              />
             ) : null}
 
             <div className="mt-4 overflow-hidden rounded-2xl bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
@@ -220,7 +229,14 @@ export function MapRestaurantSidePanel({
               </a>
             </div>
 
-            <RestaurantCommunityNotesSection mealId={Number.parseInt(r.id, 10)} />
+            <RestaurantCommunityNotesSection
+              mealId={Number.parseInt(r.id, 10)}
+              restaurantId={
+                r.restaurantId != null
+                  ? Number.parseInt(String(r.restaurantId), 10) || undefined
+                  : undefined
+              }
+            />
 
             <FlagOutdatedReport
               mealId={Number.parseInt(r.id, 10)}

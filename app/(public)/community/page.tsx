@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 
 import { ApiError } from "@/api/inspector";
@@ -19,6 +19,7 @@ import {
   PUBLIC_PAGE_ACCENT,
   PublicListPageShell,
 } from "@/components/layout/PublicListPageShell";
+import { getUserIdFromAccessToken } from "@/lib/auth/jwtUserId";
 import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils/cn";
 
@@ -26,7 +27,11 @@ const FILTER_LABELS = ["All", "Finds", "Tips", "Price checks"] as const;
 
 export default function CommunityPage() {
   const queryClient = useQueryClient();
-  const { session, isSignedIn } = useAuth();
+  const { isSignedIn } = useAuth();
+  const myUserId = useMemo(
+    () => (isSignedIn ? getUserIdFromAccessToken() : null),
+    [isSignedIn],
+  );
   const [activeFilter, setActiveFilter] = useState(0);
   const [composerOpen, setComposerOpen] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -50,13 +55,32 @@ export default function CommunityPage() {
     staleTime: 30_000,
   });
 
+  useEffect(() => {
+    if (feedPosts.length === 0) return;
+    setLikedPostIds(
+      new Set(feedPosts.filter((post) => post.likedByMe).map((post) => post.id)),
+    );
+  }, [feedPosts]);
+
   const handlePostCreated = (post: ApiCommunityPost) => {
     void queryClient.invalidateQueries({ queryKey: ["community-posts"] });
-    const card = mapApiCommunityPostToFeedCard(post, session?.nickname);
+    const card = mapApiCommunityPostToFeedCard({ ...post, likedByMe: false });
     queryClient.setQueryData<FeedPostCard[]>(["community-posts"], (prev) => [
       card,
       ...(prev ?? []),
     ]);
+  };
+
+  const handlePostUpdated = (post: ApiCommunityPost) => {
+    const existing = feedPosts.find((p) => p.id === post.id);
+    const card = mapApiCommunityPostToFeedCard({
+      ...post,
+      likedByMe: existing?.likedByMe ?? post.likedByMe ?? false,
+    });
+    queryClient.setQueryData<FeedPostCard[]>(["community-posts"], (prev) =>
+      (prev ?? []).map((p) => (p.id === card.id ? card : p)),
+    );
+    void queryClient.invalidateQueries({ queryKey: ["community-posts"] });
   };
 
   const handleLike = async (postId: string) => {
@@ -206,6 +230,7 @@ export default function CommunityPage() {
                 likedByMe={likedPostIds.has(post.id)}
                 liking={likingPostId === post.id}
                 isSignedIn={isSignedIn}
+                canEdit={myUserId != null && post.authorUserId === myUserId}
                 onLike={() => handleLike(post.id)}
                 onCommentsOpen={() => setCommentsPanelPost(post)}
                 onEditOpen={() => {
@@ -226,10 +251,14 @@ export default function CommunityPage() {
 
       <FeedCommentModal
         open={composerOpen}
-        onClose={() => setComposerOpen(false)}
+        onClose={() => {
+          setComposerOpen(false);
+          setEditingPostId(null);
+        }}
         mode="feed"
-        submitToApi={!editingPostId}
+        editPostId={editingPostId}
         onPostCreated={handlePostCreated}
+        onPostUpdated={handlePostUpdated}
         defaultTitle={
           (editingPostId ? feedPosts.find((p) => p.id === editingPostId)?.title : "") ?? ""
         }

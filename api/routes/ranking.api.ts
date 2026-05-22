@@ -1,5 +1,6 @@
 import { apiRequest } from "@/api/inspector";
 import type {
+  GetRestaurantPopularityResponse,
   GetRestaurantRankingsResponse,
   GetSuburbRankingsResponse,
   RankingSortBy,
@@ -27,6 +28,13 @@ export function getRestaurantRankings(params: GetRestaurantRankingsParams = {}) 
   const qs = q.toString();
   return apiRequest<GetRestaurantRankingsResponse>(
     `/api/ranking/restaurants${qs ? `?${qs}` : ""}`,
+  );
+}
+
+/** Single restaurant — votes ×3 + activity ×2 + engagement ×1 (ranking API). */
+export function getRestaurantPopularity(restaurantId: number) {
+  return apiRequest<GetRestaurantPopularityResponse>(
+    `/api/ranking/restaurants?restaurantId=${encodeURIComponent(String(restaurantId))}`,
   );
 }
 

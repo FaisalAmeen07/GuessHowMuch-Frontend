@@ -38,11 +38,13 @@ export function useFilterFeedsPreview({
       searchCenter.lng,
       draftPrice,
       draftCuisine,
+      draftShow,
     ],
     queryFn: () =>
       fetchMapListings(searchCenter, {
         priceFilterId: draftPrice,
         cuisineId: draftCuisine,
+        showOnlyFeeds: draftShow,
       }),
     enabled: open,
     staleTime: 30_000,
@@ -55,6 +57,7 @@ export function useFilterFeedsPreview({
     searchLocation,
     draftCuisine,
     draftShow,
+    draftShow !== "all",
   ).length;
 
   return {

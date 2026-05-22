@@ -1,13 +1,34 @@
 import type { FilterListingRestaurant, ListingMeal } from "@/api/types/listings";
+import {
+  TOP_RATED_CHIP_MIN_NET_SCORE,
+  TOP_RATED_MIN_VOTE_COUNT,
+} from "@/constants/limits";
 import type { Restaurant } from "@/features/restaurants/types/restaurant";
 import { isMealFeaturedActive } from "@/features/restaurants/utils/featuredMeal";
 import { mealHasActiveHotDeal } from "@/features/restaurants/utils/hotDeal";
+
+type PickMapPinOptions = {
+  /** Hot-deals filter: pin the meal that has a live special (not regular meals). */
+  hotDealsOnly?: boolean;
+};
 
 /** One map pin per restaurant — picks cheapest eligible meal; swaps when that meal is hidden/deleted. */
 function pickMapPinMeal(
   meals: ListingMeal[],
   maxPrice?: number,
+  options?: PickMapPinOptions,
 ): ListingMeal | null {
+  if (options?.hotDealsOnly) {
+    const withLiveDeal = meals.filter((m) => {
+      if (m.status !== "APPROVED") return false;
+      if (!mealHasActiveHotDeal(m)) return false;
+      if (maxPrice != null && m.price > maxPrice) return false;
+      return true;
+    });
+    if (!withLiveDeal.length) return null;
+    return withLiveDeal.reduce((best, m) => (m.price < best.price ? m : best));
+  }
+
   const eligible = meals.filter((m) => {
     if (m.status !== "APPROVED") return false;
     if (mealHasActiveHotDeal(m)) return false;
@@ -26,18 +47,18 @@ function pickMapPinMeal(
 export function mapListingRowsToRestaurants(
   rows: FilterListingRestaurant[],
   maxPrice?: number,
+  options?: PickMapPinOptions,
 ): Restaurant[] {
   const out: Restaurant[] = [];
 
   for (const r of rows) {
     if (r.latitude == null || r.longitude == null) continue;
 
-    const meal = pickMapPinMeal(r.meals, maxPrice);
+    const meal = pickMapPinMeal(r.meals, maxPrice, options);
     if (!meal) continue;
 
-    const hasHotDeal = r.meals.some(
-      (m) => m.status === "APPROVED" && mealHasActiveHotDeal(m),
-    );
+    const hasHotDeal =
+      options?.hotDealsOnly || mealHasActiveHotDeal(meal);
 
     out.push({
       id: String(meal.id),
@@ -49,7 +70,11 @@ export function mapListingRowsToRestaurants(
       address: r.address ?? r.suburb,
       imageUrl: meal.image,
       position: { lat: r.latitude, lng: r.longitude },
-      netScore: 0,
+      netScore: r.netScore ?? 0,
+      voteCount: r.voteCount ?? 0,
+      isTopRated:
+        (r.voteCount ?? 0) >= TOP_RATED_MIN_VOTE_COUNT ||
+        (r.netScore ?? 0) >= TOP_RATED_CHIP_MIN_NET_SCORE,
       worthIt: 0,
       overrated: 0,
       isHotDeal: hasHotDeal,

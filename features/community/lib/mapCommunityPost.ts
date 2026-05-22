@@ -1,9 +1,12 @@
 import type { ApiCommunityPost } from "@/api/types/community";
 import type { FeedCategoryId } from "@/features/community/constants/feedCategories";
+import { displayCommunityAuthor } from "@/features/community/lib/displayAuthor";
 
 export type FeedPostCard = {
   id: string;
+  authorUserId: number;
   author: string;
+  isAdminAuthor: boolean;
   initial: string;
   ago: string;
   title: string;
@@ -12,6 +15,7 @@ export type FeedPostCard = {
   likes: number;
   comments: number;
   category: FeedCategoryId;
+  likedByMe: boolean;
 };
 
 const CATEGORY_FROM_API: Record<string, FeedCategoryId> = {
@@ -32,14 +36,15 @@ export function formatFeedAgo(iso: string): string {
   return new Intl.DateTimeFormat("en-AU", { dateStyle: "medium" }).format(new Date(iso));
 }
 
-export function mapApiCommunityPostToFeedCard(
-  post: ApiCommunityPost,
-  authorName?: string,
-): FeedPostCard {
-  const author = authorName?.trim() || post.user?.name?.trim() || "Member";
+export function mapApiCommunityPostToFeedCard(post: ApiCommunityPost): FeedPostCard {
+  const author = displayCommunityAuthor(post.user);
+  const authorUserId = post.user?.id ?? post.userId;
+
   return {
     id: post.id,
+    authorUserId,
     author,
+    isAdminAuthor: post.user?.role === "ADMIN",
     initial: author.slice(0, 1).toUpperCase(),
     ago: formatFeedAgo(post.createdAt),
     title: post.title,
@@ -48,5 +53,6 @@ export function mapApiCommunityPostToFeedCard(
     likes: post.likesCount,
     comments: post.commentsCount,
     category: CATEGORY_FROM_API[post.category] ?? "finds",
+    likedByMe: Boolean(post.likedByMe),
   };
 }

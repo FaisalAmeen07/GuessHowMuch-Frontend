@@ -1,6 +1,5 @@
 import { filterListings, getListings } from "@/api/routes/listings.api";
 import { nearbySearchConfig } from "@/config/nearbySearch";
-import { TOP_RATED_MIN_NET_SCORE } from "@/constants/limits";
 import type {
   CuisineFilterId,
   LatLng,
@@ -10,22 +9,24 @@ import type {
 import { haversineKm } from "@/features/restaurants/utils/distance";
 import {
   cuisineFilterToApi,
+  isTopRatedFilter,
   maxPriceForFilter,
+  showOnlyFeedsToListingsApi,
 } from "@/features/restaurants/utils/listingFilters";
+import type { ShowOnlyFeedsId } from "@/features/restaurants/types/restaurant";
+import { ensureTopRatedRankingCache } from "@/features/maps/services/ensureTopRatedRankingCache";
 import { mapFilterListingToRestaurants } from "@/features/restaurants/utils/mapListingFilter";
 import { mapListingRowsToRestaurants } from "@/features/restaurants/utils/mapListings";
+import { filterRestaurantsToTopRatedLeaderboard } from "@/lib/rankings/topRatedRankingStorage";
 
 function withinRadiusKm(list: Restaurant[], center: LatLng, radiusKm: number): Restaurant[] {
   return list.filter((r) => haversineKm(center, r.position) <= radiusKm);
 }
 
-function applyTopRatedFilter(list: Restaurant[]): Restaurant[] {
-  return list.filter((r) => r.isTopRated || r.netScore >= TOP_RATED_MIN_NET_SCORE);
-}
-
 export type MapListingsFilterParams = {
   priceFilterId: PriceFilterId;
   cuisineId: CuisineFilterId;
+  showOnlyFeeds?: ShowOnlyFeedsId;
 };
 
 export async function fetchMapListings(
@@ -35,33 +36,44 @@ export async function fetchMapListings(
   const { radiusKm } = nearbySearchConfig;
   const maxPrice = maxPriceForFilter(filters.priceFilterId);
   const cuisine = cuisineFilterToApi(filters.cuisineId);
-  const useFilterApi = maxPrice != null || cuisine != null;
+  const topRatedChip = isTopRatedFilter(filters.priceFilterId);
+  const showTopRated = filters.showOnlyFeeds === "top50";
+  const applyTopRated = topRatedChip || showTopRated;
+  const showOnlyApi = showOnlyFeedsToListingsApi(filters.showOnlyFeeds ?? "all");
+  const useFilterApi =
+    maxPrice != null ||
+    cuisine != null ||
+    applyTopRated ||
+    Object.keys(showOnlyApi).length > 0;
+
+  let topRatedIds = new Set<number>();
+  if (applyTopRated) {
+    topRatedIds = await ensureTopRatedRankingCache(searchCenter, radiusKm);
+  }
+
+  let list: Restaurant[] = [];
 
   if (useFilterApi) {
     const filterRes = await filterListings({
       ...(maxPrice != null ? { maxPrice } : {}),
       ...(cuisine ? { cuisine } : {}),
+      ...showOnlyApi,
     });
     if (!filterRes.success) return [];
-    return withinRadiusKm(
-      mapFilterListingToRestaurants(filterRes.data, maxPrice),
-      searchCenter,
-      radiusKm,
+    list = mapFilterListingToRestaurants(
+      filterRes.data,
+      maxPrice,
+      filters.showOnlyFeeds === "hotDeals",
     );
+  } else {
+    const listingsRes = await getListings();
+    if (!listingsRes.success) return [];
+    list = mapListingRowsToRestaurants(listingsRes.data);
   }
 
-  const listingsRes = await getListings();
-  if (!listingsRes.success) return [];
-
-  let list = withinRadiusKm(
-    mapListingRowsToRestaurants(listingsRes.data),
-    searchCenter,
-    radiusKm,
-  );
-
-  if (filters.priceFilterId === "top") {
-    list = applyTopRatedFilter(list);
+  if (applyTopRated) {
+    list = filterRestaurantsToTopRatedLeaderboard(list, topRatedIds);
   }
 
-  return list;
+  return withinRadiusKm(list, searchCenter, radiusKm);
 }

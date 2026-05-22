@@ -1,11 +1,18 @@
 "use client";
 
 import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   getPopularityScoreFromRow,
   useRestaurantPopularity,
 } from "@/features/rankings/hooks/useRestaurantPopularity";
+import {
+  formatPopularityNetScore,
+  getStoredPopularityNetScore,
+  POPULARITY_UPDATED_EVENT,
+  setStoredPopularityNetScore,
+} from "@/lib/rankings/restaurantPopularityStorage";
 import { formatRankingScoreBreakdown } from "@/features/rankings/lib/rankingDisplay";
 import { useMealVotes } from "@/features/restaurants/hooks/useMealVotes";
 import { cn } from "@/lib/utils/cn";
@@ -18,10 +25,9 @@ type MealVoteCardsUIProps = {
   vote: MealVoteCardsState;
   variant?: "panel" | "detail";
   className?: string;
-  /** Backend popularity score — shown in Net score column on detail screen. */
-  popularityScore?: number | null;
-  popularityLoading?: boolean;
-  /** Votes · Activity · Engagement · Popularity (detail screen). */
+  /** Ranking API vote net score label (e.g. +1). */
+  rankingNetScoreLabel?: string | null;
+  rankingLoading?: boolean;
   scoreBreakdown?: string | null;
 };
 
@@ -29,8 +35,8 @@ export function MealVoteCardsUI({
   vote,
   variant = "panel",
   className,
-  popularityScore = null,
-  popularityLoading = false,
+  rankingNetScoreLabel = null,
+  rankingLoading = false,
   scoreBreakdown = null,
 }: MealVoteCardsUIProps) {
   const {
@@ -46,21 +52,24 @@ export function MealVoteCardsUI({
   } = vote;
 
   const isPanel = variant === "panel";
-  const showPopularity = !isPanel;
-  const centerValue = showPopularity
-    ? popularityLoading
-      ? "…"
-      : popularityScore != null
-        ? String(popularityScore)
-        : netScoreLabel
-    : loading
-      ? "…"
-      : netScoreLabel;
+  const usePopularityNet = rankingNetScoreLabel != null || rankingLoading;
+  const centerValue =
+    usePopularityNet || !isPanel
+      ? rankingLoading && rankingNetScoreLabel == null
+        ? "…"
+        : rankingNetScoreLabel != null
+          ? rankingNetScoreLabel
+          : loading
+            ? "…"
+            : netScoreLabel
+      : loading
+        ? "…"
+        : netScoreLabel;
   const cardClass = isPanel
     ? "rounded-xl bg-white px-2 py-3 text-center shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition"
     : "text-center";
 
-  const disabled = hasVoted || loading || submitting != null;
+  const disabled = loading || submitting != null;
 
   return (
     <div className={className}>
@@ -77,8 +86,7 @@ export function MealVoteCardsUI({
           aria-pressed={myVote === "UP"}
           className={cn(
             cardClass,
-            "disabled:cursor-not-allowed disabled:opacity-60",
-            myVote === "UP" && "ring-2 ring-emerald-400/80",
+            "cursor-pointer disabled:cursor-not-allowed disabled:opacity-60",
             !disabled && "hover:bg-neutral-50/90 active:scale-[0.98]",
           )}
         >
@@ -123,8 +131,7 @@ export function MealVoteCardsUI({
           aria-pressed={myVote === "DOWN"}
           className={cn(
             cardClass,
-            "disabled:cursor-not-allowed disabled:opacity-60",
-            myVote === "DOWN" && "ring-2 ring-rose-400/80",
+            "cursor-pointer disabled:cursor-not-allowed disabled:opacity-60",
             !disabled && "hover:bg-neutral-50/90 active:scale-[0.98]",
           )}
         >
@@ -143,7 +150,7 @@ export function MealVoteCardsUI({
         </button>
       </div>
 
-      {showPopularity && scoreBreakdown ? (
+      {!isPanel && hasVoted && scoreBreakdown ? (
         <p className="mt-3 text-center text-xs leading-snug text-neutral-500">
           {scoreBreakdown}
         </p>
@@ -169,7 +176,6 @@ type MealVoteCardsProps = {
   variant?: "panel" | "detail";
   className?: string;
   restaurantId?: number;
-  suburb?: string;
 };
 
 /** Self-contained cards (loads votes internally). */
@@ -178,22 +184,60 @@ export function MealVoteCards({
   variant,
   className,
   restaurantId,
-  suburb,
 }: MealVoteCardsProps) {
-  const vote = useMealVotes(mealId);
+  const rid = restaurantId != null && restaurantId > 0 ? restaurantId : 0;
+  const useRanking = rid > 0;
   const isDetail = variant === "detail";
-  const { data: rankingRow, isLoading: popularityLoading } = useRestaurantPopularity(
-    isDetail && restaurantId != null ? restaurantId : 0,
-    isDetail && suburb ? suburb : "",
+
+  const [popularityNetLabel, setPopularityNetLabel] = useState<string | null>(() => {
+    if (!useRanking) return null;
+    const stored = getStoredPopularityNetScore(rid);
+    return stored != null ? formatPopularityNetScore(stored) : null;
+  });
+
+  const syncPopularityLabel = useCallback(
+    (score: number) => {
+      setPopularityNetLabel(formatPopularityNetScore(score));
+    },
+    [],
   );
+
+  const vote = useMealVotes(mealId, {
+    poll: isDetail,
+    restaurantId: useRanking ? rid : undefined,
+    onPopularityScore: useRanking ? syncPopularityLabel : undefined,
+  });
+
+  const { data: rankingRow, isLoading: popularityLoading } = useRestaurantPopularity(
+    useRanking ? rid : 0,
+  );
+
+  useEffect(() => {
+    const score = getPopularityScoreFromRow(rankingRow);
+    if (score == null || !useRanking) return;
+    setStoredPopularityNetScore(rid, score);
+    setPopularityNetLabel(formatPopularityNetScore(score));
+  }, [rankingRow, rid, useRanking]);
+
+  useEffect(() => {
+    if (!useRanking) return;
+    const onUpdated = (e: Event) => {
+      const { restaurantId: updatedId, score } = (
+        e as CustomEvent<{ restaurantId: number; score: number }>
+      ).detail;
+      if (updatedId === rid) syncPopularityLabel(score);
+    };
+    window.addEventListener(POPULARITY_UPDATED_EVENT, onUpdated);
+    return () => window.removeEventListener(POPULARITY_UPDATED_EVENT, onUpdated);
+  }, [rid, useRanking, syncPopularityLabel]);
 
   return (
     <MealVoteCardsUI
       vote={vote}
       variant={variant}
       className={className}
-      popularityScore={isDetail ? getPopularityScoreFromRow(rankingRow) : undefined}
-      popularityLoading={isDetail && popularityLoading}
+      rankingNetScoreLabel={useRanking ? popularityNetLabel : undefined}
+      rankingLoading={useRanking && popularityLoading}
       scoreBreakdown={
         isDetail && rankingRow ? formatRankingScoreBreakdown(rankingRow) : undefined
       }

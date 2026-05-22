@@ -5,6 +5,7 @@ import { ThumbsUp } from "lucide-react";
 
 import type { RankedRestaurantRow } from "@/api/types/ranking";
 import { routes } from "@/config/routes";
+import { useMealVoteTotals } from "@/features/restaurants/hooks/useMealVoteTotals";
 import { formatPriceCompact } from "@/lib/utils/formatCurrency";
 import { cn } from "@/lib/utils/cn";
 
@@ -16,6 +17,8 @@ type RankingRestaurantCardProps = {
 };
 
 export function RankingRestaurantCard({ row }: RankingRestaurantCardProps) {
+  const { netScoreLabel, isLoading: votesLoading } = useMealVoteTotals(row.topMealId);
+
   return (
     <Link
       href={`${routes.restaurant(String(row.restaurantId))}?meal=${row.topMealId}`}
@@ -58,7 +61,7 @@ export function RankingRestaurantCard({ row }: RankingRestaurantCardProps) {
           <span className="inline-flex items-center gap-1 rounded-full bg-neutral-900 px-2.5 py-1.5 text-xs font-bold shadow-sm">
             <ThumbsUp className="h-3.5 w-3.5 shrink-0" aria-hidden style={{ color: VOTE_YELLOW }} />
             <span className="tabular-nums" style={{ color: VOTE_YELLOW }}>
-              {row.votes.displayScore}
+              {votesLoading ? "…" : netScoreLabel}
             </span>
           </span>
         </div>

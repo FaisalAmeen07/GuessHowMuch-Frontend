@@ -11,6 +11,14 @@ import type {
 export type FilterListingsParams = {
   maxPrice?: number;
   cuisine?: string;
+  topRated?: boolean;
+  hotDeals?: boolean;
+  priceVerified?: boolean;
+  /** Filter feeds “Top rated” — minimum total votes (up + down). */
+  minVotes?: number;
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
 };
 
 export function getListings() {
@@ -53,6 +61,13 @@ export function filterListings(params: FilterListingsParams = {}) {
   const q = new URLSearchParams();
   if (params.maxPrice != null) q.set("maxPrice", String(params.maxPrice));
   if (params.cuisine?.trim()) q.set("cuisine", params.cuisine.trim());
+  if (params.topRated) q.set("topRated", "true");
+  if (params.hotDeals) q.set("hotDeals", "true");
+  if (params.priceVerified) q.set("priceVerified", "true");
+  if (params.minVotes != null) q.set("minVotes", String(params.minVotes));
+  if (params.lat != null) q.set("lat", String(params.lat));
+  if (params.lng != null) q.set("lng", String(params.lng));
+  if (params.radiusKm != null) q.set("radiusKm", String(params.radiusKm));
   const qs = q.toString();
   return apiRequest<FilterListingsResponse>(
     `/api/listings/filter${qs ? `?${qs}` : ""}`,

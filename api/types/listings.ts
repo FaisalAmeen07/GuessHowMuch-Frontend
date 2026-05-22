@@ -31,6 +31,10 @@ export type FilterListingRestaurant = {
   address?: string;
   latitude: number | null;
   longitude: number | null;
+  /** Vote net score from ranking (Top Rated filter). */
+  netScore?: number;
+  /** Total votes (up + down) from ranking. */
+  voteCount?: number;
   meals: FilterListingMeal[];
 };
 

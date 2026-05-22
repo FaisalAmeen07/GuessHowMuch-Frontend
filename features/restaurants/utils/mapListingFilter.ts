@@ -5,6 +5,7 @@ import { mapListingRowsToRestaurants } from "@/features/restaurants/utils/mapLis
 export function mapFilterListingToRestaurants(
   rows: FilterListingRestaurant[],
   maxPrice?: number,
+  hotDealsOnly = false,
 ): Restaurant[] {
-  return mapListingRowsToRestaurants(rows, maxPrice);
+  return mapListingRowsToRestaurants(rows, maxPrice, { hotDealsOnly });
 }

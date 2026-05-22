@@ -14,7 +14,8 @@ export function useMealVoteTotals(mealId: number) {
       return res.data;
     },
     enabled: Number.isFinite(mealId) && mealId > 0,
-    staleTime: 30_000,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
   });
 
   const score = query.data?.score ?? 0;

@@ -143,7 +143,6 @@ export function RestaurantDetailScreen({
         <MealVoteCards
           mealId={selectedMeal.mealId}
           restaurantId={detail.restaurantId}
-          suburb={detail.suburb}
           variant="detail"
           className="mt-4"
         />

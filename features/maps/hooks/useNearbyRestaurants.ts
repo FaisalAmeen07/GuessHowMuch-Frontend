@@ -18,6 +18,7 @@ export function useNearbyRestaurants(
       searchCenter.lng,
       filters.priceFilterId,
       filters.cuisineId,
+      filters.showOnlyFeeds ?? "all",
     ],
     queryFn: () => fetchMapListings(searchCenter, filters),
     staleTime: 30_000,

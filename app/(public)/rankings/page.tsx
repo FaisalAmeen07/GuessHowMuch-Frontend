@@ -11,6 +11,7 @@ import { siteConfig } from "@/config/site";
 import { RankingRestaurantCard } from "@/features/rankings/components/RankingRestaurantCard";
 import { useRankingFilters } from "@/features/rankings/hooks/useRankingFilters";
 import { getRankingBannerSubtitle } from "@/features/rankings/lib/rankingDisplay";
+import { syncTopRatedRanking } from "@/lib/rankings/topRatedRankingStorage";
 import { useUserLocation } from "@/features/maps/hooks/useUserLocation";
 import { cn } from "@/lib/utils/cn";
 
@@ -62,11 +63,18 @@ export default function RankingsPage() {
         radiusKm: nearMeActive ? NEAR_ME_RADIUS_KM : undefined,
       }),
     enabled: Boolean(filter) && canFetchRankings,
-    staleTime: 60_000,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
   });
 
   const rows = rankingRes?.data ?? [];
   const apiSortBy = rankingRes?.sortBy ?? filter?.sortBy ?? "votes";
+
+  useEffect(() => {
+    if (rows.length > 0 && apiSortBy === "popularity") {
+      syncTopRatedRanking(rows);
+    }
+  }, [rows, apiSortBy]);
 
   const contextBanner = useMemo(() => {
     if (!rankingRes?.context) {

@@ -6,7 +6,7 @@ import { useEffect, useId, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 
 import { ApiError } from "@/api/inspector";
-import { createCommunityPost } from "@/api/routes/community.api";
+import { createCommunityPost, patchCommunityPost } from "@/api/routes/community.api";
 import type { ApiCommunityPost } from "@/api/types/community";
 import { routes } from "@/config/routes";
 import {
@@ -38,9 +38,12 @@ export type FeedCommentModalProps = {
   defaultTitle?: string;
   defaultCategory?: FeedCategoryId;
   defaultDetailsHtml?: string;
-  /** When false, submit stays local-only (e.g. mock edit flow). */
+  /** When set, submit updates this post via PATCH instead of creating. */
+  editPostId?: string | null;
+  /** When false, submit stays local-only (comment mode / offline demo). */
   submitToApi?: boolean;
   onPostCreated?: (post: ApiCommunityPost) => void;
+  onPostUpdated?: (post: ApiCommunityPost) => void;
 };
 
 export function FeedCommentModal({
@@ -51,7 +54,9 @@ export function FeedCommentModal({
   defaultCategory,
   defaultDetailsHtml = "",
   submitToApi = true,
+  editPostId = null,
   onPostCreated,
+  onPostUpdated,
 }: FeedCommentModalProps) {
   const titleId = useId();
 
@@ -77,14 +82,16 @@ export function FeedCommentModal({
 
   const ui = (
     <FeedCommentModalForm
-      key={open ? `${mode}-${defaultTitle}-${defaultCategory ?? ""}` : "closed"}
+      key={open ? `${mode}-${editPostId ?? "new"}-${defaultTitle}-${defaultCategory ?? ""}` : "closed"}
       titleId={titleId}
       mode={mode}
       defaultTitle={defaultTitle}
       defaultCategory={defaultCategory}
       defaultDetailsHtml={defaultDetailsHtml}
       submitToApi={submitToApi}
+      editPostId={editPostId}
       onPostCreated={onPostCreated}
+      onPostUpdated={onPostUpdated}
       onClose={onClose}
     />
   );
@@ -100,7 +107,9 @@ type FeedCommentModalFormProps = {
   defaultCategory?: FeedCategoryId;
   defaultDetailsHtml: string;
   submitToApi: boolean;
+  editPostId: string | null;
   onPostCreated?: (post: ApiCommunityPost) => void;
+  onPostUpdated?: (post: ApiCommunityPost) => void;
   onClose: () => void;
 };
 
@@ -111,7 +120,9 @@ function FeedCommentModalForm({
   defaultCategory,
   defaultDetailsHtml,
   submitToApi,
+  editPostId,
   onPostCreated,
+  onPostUpdated,
   onClose,
 }: FeedCommentModalFormProps) {
   const { isSignedIn } = useAuth();
@@ -137,7 +148,7 @@ function FeedCommentModalForm({
 
     if (isFeed && submitToApi) {
       if (!isSignedIn) {
-        setError("Login to post to the feed.");
+        setError(editPostId ? "Login to edit your post." : "Login to post to the feed.");
         return;
       }
       const titleTrimmed = title.trim();
@@ -151,12 +162,26 @@ function FeedCommentModalForm({
 
       setSubmitting(true);
       try {
-        const res = await createCommunityPost(payload);
-        onPostCreated?.(res.data);
+        if (editPostId) {
+          const res = await patchCommunityPost(editPostId, {
+            title: payload.title,
+            category: payload.category,
+            body: payload.body,
+            imageFile: payload.imageFile,
+          });
+          onPostUpdated?.(res.data);
+        } else {
+          const res = await createCommunityPost(payload);
+          onPostCreated?.(res.data);
+        }
         onClose();
       } catch (err) {
         setError(
-          err instanceof ApiError ? err.message : "Could not post. Please try again.",
+          err instanceof ApiError
+            ? err.message
+            : editPostId
+              ? "Could not save changes. Please try again."
+              : "Could not post. Please try again.",
         );
       } finally {
         setSubmitting(false);
@@ -173,8 +198,17 @@ function FeedCommentModalForm({
     onClose();
   };
 
-  const heading = isFeed ? "Add feed" : "Add comment";
-  const submitLabel = submitting ? "Posting…" : isFeed ? "Post feed" : "Post comment";
+  const isEditing = isFeed && Boolean(editPostId);
+  const heading = isFeed ? (isEditing ? "Edit feed" : "Add feed") : "Add comment";
+  const submitLabel = submitting
+    ? isEditing
+      ? "Saving…"
+      : "Posting…"
+    : isFeed
+      ? isEditing
+        ? "Save changes"
+        : "Post feed"
+      : "Post comment";
   const canSubmit =
     !submitting &&
     (isFeed ? title.trim().length > 0 : true) &&

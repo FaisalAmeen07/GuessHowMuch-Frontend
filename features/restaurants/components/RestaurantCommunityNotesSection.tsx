@@ -9,6 +9,12 @@ import { ApiError } from "@/api/inspector";
 import { createComment, getMealComments, toggleCommentLike } from "@/api/routes/comments.api";
 import { routes } from "@/config/routes";
 import { mapMealCommentsToNotes } from "@/features/restaurants/lib/mapMealComments";
+import {
+  getCommentLikePopularityDelta,
+  getReplyCommentPopularityDelta,
+  getTopLevelCommentPopularityDelta,
+} from "@/lib/rankings/popularityAdjust";
+import { adjustStoredPopularityNetScore } from "@/lib/rankings/restaurantPopularityStorage";
 import type { RestaurantCommunityNote } from "@/features/restaurants/types/restaurant";
 import { useAuth } from "@/providers/AuthProvider";
 import { cn } from "@/lib/utils/cn";
@@ -17,6 +23,7 @@ const ACCENT = "#FF5722";
 
 type RestaurantCommunityNotesSectionProps = {
   mealId: number;
+  restaurantId?: number;
   className?: string;
 };
 
@@ -83,6 +90,7 @@ function NoteActions({
 
 export function RestaurantCommunityNotesSection({
   mealId,
+  restaurantId,
   className,
 }: RestaurantCommunityNotesSectionProps) {
   const queryClient = useQueryClient();
@@ -114,6 +122,14 @@ export function RestaurantCommunityNotesSection({
   const refreshComments = () =>
     queryClient.invalidateQueries({ queryKey: ["meal-comments", mealId] });
 
+  const bumpPopularityFromComment = (delta: number) => {
+    if (restaurantId == null || restaurantId <= 0 || delta === 0) return;
+    adjustStoredPopularityNetScore(restaurantId, delta);
+    void queryClient.invalidateQueries({
+      queryKey: ["restaurant-popularity", restaurantId],
+    });
+  };
+
   const handleApiError = (err: unknown) => {
     if (err instanceof ApiError) {
       if (err.status === 401) {
@@ -134,6 +150,7 @@ export function RestaurantCommunityNotesSection({
     try {
       await createComment({ mealId, content: body });
       setDraft("");
+      bumpPopularityFromComment(getTopLevelCommentPopularityDelta());
       await refreshComments();
     } catch (err) {
       handleApiError(err);
@@ -152,6 +169,7 @@ export function RestaurantCommunityNotesSection({
       await createComment({ mealId, content: body, parentCommentId: parentId });
       setReplyDraft("");
       setReplyingToIndex(null);
+      bumpPopularityFromComment(getReplyCommentPopularityDelta());
       await refreshComments();
     } catch (err) {
       handleApiError(err);
@@ -166,6 +184,7 @@ export function RestaurantCommunityNotesSection({
     setLikingId(commentId);
     try {
       await toggleCommentLike(commentId);
+      bumpPopularityFromComment(getCommentLikePopularityDelta());
       await refreshComments();
     } catch (err) {
       handleApiError(err);
