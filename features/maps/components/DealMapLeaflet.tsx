@@ -235,7 +235,7 @@ export function DealMapLeaflet({
             <Marker
               key={`${r.id}-${selectedId === r.id ? "1" : "0"}`}
               position={[r.position.lat, r.position.lng]}
-              icon={icons.get(r.id) ?? priceTeardropIcon(r, selectedId === r.id)}
+              icon={icons.get(r.id) ?? priceTeardropIcon(r, selectedId === r.id, simpleMapPins)}
               eventHandlers={{ click: () => onSelect(r.id) }}
               zIndexOffset={
                 selectedId === r.id ? 800 : r.isFeatured && !simpleMapPins ? 400 : 0
