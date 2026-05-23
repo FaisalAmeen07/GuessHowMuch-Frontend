@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { MapPin, Navigation, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { MapPin, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { useCallback, useMemo, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { ProfileLink } from "@/components/layout/ProfileLink";
@@ -14,11 +14,8 @@ import { useDrivingDistances } from "@/features/maps/hooks/useDrivingDistances";
 import { useNearbyRestaurants } from "@/features/maps/hooks/useNearbyRestaurants";
 import { useSearchLocationGeocode } from "@/features/maps/hooks/useSearchLocationGeocode";
 import { useUserLocation } from "@/features/maps/hooks/useUserLocation";
-import { LOCATION_PROMPT_AUTO_DISMISS_MS } from "@/constants/limits";
 import { RestaurantPreviewCard } from "@/features/restaurants/components/RestaurantPreviewCard";
 import {
-  listingsHubLabel,
-  nearbySearchConfig,
   resolveNearbySearchCenter,
 } from "@/config/nearbySearch";
 import {
@@ -81,7 +78,7 @@ const ACCENT = "#FF5722";
 const MAP_HEADER_CONTROL_ROUNDED = "rounded-2xl";
 
 export function MapExploreScreen() {
-  const { coords, state, refresh } = useUserLocation();
+  const { coords, state } = useUserLocation();
   const locationReady = state.status === "ready";
   const nearbySearchCenter = useMemo(
     () => resolveNearbySearchCenter(coords, locationReady),
@@ -124,22 +121,8 @@ export function MapExploreScreen() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [sidePanelAnchor, setSidePanelAnchor] = useState<SidePanelAnchor | null>(null);
   const [profilePanelAnchor, setProfilePanelAnchor] = useState<SidePanelAnchor | null>(null);
-  const [locationPromptVisible, setLocationPromptVisible] = useState(true);
 
   useSearchLocationGeocode(searchQuery, setSearchLocation);
-
-  useEffect(() => {
-    if (locationReady) {
-      setLocationPromptVisible(true);
-      return;
-    }
-    setLocationPromptVisible(true);
-    const timer = window.setTimeout(
-      () => setLocationPromptVisible(false),
-      LOCATION_PROMPT_AUTO_DISMISS_MS,
-    );
-    return () => window.clearTimeout(timer);
-  }, [locationReady, state.status]);
 
   useEffect(() => {
     setSelectedRestaurantId(null);
@@ -571,40 +554,22 @@ export function MapExploreScreen() {
           </div>
         ) : null}
 
-        {!locationReady && locationPromptVisible && !showSearchResults && (
+        {!locationReady && !showSearchResults && (
           <div className="pointer-events-auto absolute inset-0 z-[1000] flex items-center justify-center bg-white/80 p-6 backdrop-blur-[2px]">
             <div className="max-w-sm text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#FF5722]/10">
                 <MapPin className="h-7 w-7 text-[#FF5722]" />
               </div>
-              <p className="text-lg font-semibold text-neutral-900">Turn on your location</p>
-              <p className="mt-2 text-sm leading-snug text-neutral-600">
-                {state.status === "loading" || state.status === "idle"
-                  ? `Deals are around ${listingsHubLabel()}. Allow location to centre the map on you, or browse listings (${nearbySearchConfig.radiusKm} km radius).`
-                  : state.status === "denied" || state.status === "unavailable"
-                    ? state.message
-                    : ""}
+              <p className="hidden text-lg font-semibold text-neutral-900 sm:block">
+                Turn on your location
               </p>
-              {(state.status === "denied" ||
-                state.status === "unavailable" ||
-                state.status === "idle") && (
-                <button
-                  type="button"
-                  onClick={refresh}
-                  className="mt-5 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:brightness-105"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  <Navigation className="h-4 w-4" />
-                  Enable location
-                </button>
+              <p className="text-lg font-semibold text-neutral-900 sm:hidden">
+                Turn on your location first
+              </p>
+              {(state.status === "denied" || state.status === "unavailable") && (
+                <p className="mt-2 text-sm leading-snug text-neutral-600">{state.message}</p>
               )}
             </div>
-          </div>
-        )}
-
-        {nearbySearchCenter && nearbyLoading && (
-          <div className="pointer-events-none absolute left-1/2 top-1/2 z-[1000] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/95 px-4 py-2 text-sm font-medium text-neutral-700 shadow-md">
-            Loading nearby deals…
           </div>
         )}
 

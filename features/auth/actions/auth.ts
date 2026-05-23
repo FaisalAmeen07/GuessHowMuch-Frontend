@@ -11,6 +11,10 @@ import {
   getPendingEmail,
   setPendingEmail,
 } from "@/lib/auth/pendingEmail";
+import {
+  clearAccessTokenCookie,
+  setAccessTokenCookie,
+} from "@/lib/auth/accessTokenCookie.server";
 import { clearSession, getSession, setSession } from "@/lib/auth/session";
 import type { AuthSession } from "@/lib/auth/types";
 
@@ -74,9 +78,10 @@ export type EstablishSessionResult =
   | { ok: true }
   | { ok: false; reason: "missing-email" };
 
-/** Sets `ghm_session` after the backend cookie is in place. Does not redirect. */
+/** Sets `ghm_session` + JWT cookie after magic-link verify. Does not redirect. */
 export async function establishSessionAfterVerify(
   backendRole: string,
+  accessToken?: string | null,
 ): Promise<EstablishSessionResult> {
   const email = await getPendingEmail();
   if (!email) {
@@ -90,6 +95,9 @@ export async function establishSessionAfterVerify(
     nickname: defaultNicknameForEmail(email, role),
   };
   await setSession(session);
+  if (accessToken?.trim()) {
+    await setAccessTokenCookie(accessToken.trim());
+  }
   await clearPendingEmail();
   return { ok: true };
 }
@@ -119,6 +127,7 @@ export async function syncProfileNickname(nickname: string): Promise<UpdateNickn
 
 export async function clearLocalSession(): Promise<void> {
   await clearSession();
+  await clearAccessTokenCookie();
   await clearPendingEmail();
 }
 

@@ -10,8 +10,8 @@ type UserLocationState =
   | { status: "denied" | "unavailable"; message: string };
 
 /**
- * Requests GPS only when permission is already granted (no prompt on first visit).
- * Otherwise call `refresh()` after the user taps Enable location.
+ * Requests GPS on map load when permission is prompt/granted.
+ * When blocked in browser site settings, the map overlay stays visible until enabled.
  */
 export function useUserLocation() {
   const [state, setState] = useState<UserLocationState>({ status: "idle" });
@@ -45,16 +45,31 @@ export function useUserLocation() {
 
     let cancelled = false;
 
-    const tryGrantedLocate = async () => {
+    const syncFromPermission = (permissionState: PermissionState) => {
+      if (cancelled) return;
+      if (permissionState === "granted" || permissionState === "prompt") {
+        request();
+        return;
+      }
+      setState({
+        status: "denied",
+        message: "Location permission denied",
+      });
+    };
+
+    const init = async () => {
       try {
         const perm = await navigator.permissions.query({ name: "geolocation" });
-        if (!cancelled && perm.state === "granted") request();
+        if (cancelled) return;
+        syncFromPermission(perm.state);
+        perm.onchange = () => syncFromPermission(perm.state);
       } catch {
-        /* Permissions API unavailable — user enables location manually */
+        if (!cancelled) request();
       }
     };
 
-    void tryGrantedLocate();
+    void init();
+
     return () => {
       cancelled = true;
     };
