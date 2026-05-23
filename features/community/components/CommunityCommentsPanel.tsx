@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { ChevronDown, MoreHorizontal, ThumbsUp, X } from "lucide-react";
+import { ChevronDown, MoreHorizontal, Send, ThumbsUp, X } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 
@@ -549,16 +549,20 @@ export function CommunityCommentsPanel({ open, post, onClose }: CommunityComment
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-[999] flex max-h-[min(88dvh,720px)] min-h-0 flex-col overflow-hidden rounded-t-[1.75rem] border border-b-0 border-neutral-200/80 bg-white text-neutral-900",
+          "fixed z-[999] flex min-h-0 flex-col overflow-hidden bg-white text-neutral-900",
+          "inset-x-0 bottom-0 max-h-[min(88dvh,720px)] rounded-t-[1.75rem] border border-b-0 border-neutral-200/80",
           "pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_40px_rgba(0,0,0,0.14)]",
-          "motion-safe:animate-[ghm-sheet-from-bottom_0.32s_cubic-bezier(0.22,1,0.36,1)_both] motion-reduce:animate-none",
+          "max-sm:motion-safe:animate-[ghm-sheet-from-bottom_0.32s_cubic-bezier(0.22,1,0.36,1)_both] max-sm:motion-reduce:animate-none",
+          "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[calc(100%-2rem)] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2",
+          "sm:max-h-[min(85vh,640px)] sm:rounded-3xl sm:border sm:pb-0",
+          "sm:shadow-[0_8px_40px_rgba(0,0,0,0.14)]",
         )}
       >
-        <div className="flex shrink-0 justify-center pt-2.5" aria-hidden>
+        <div className="flex shrink-0 justify-center pt-2.5 sm:hidden" aria-hidden>
           <span className="h-1 w-10 rounded-full bg-neutral-300" />
         </div>
 
-        <header className="relative shrink-0 border-b border-neutral-100 px-4 pb-3 pt-1">
+        <header className="relative shrink-0 border-b border-neutral-100 px-4 pb-3 pt-1 sm:px-5 sm:pt-4">
           <button
             type="button"
             onClick={onClose}
@@ -617,7 +621,7 @@ export function CommunityCommentsPanel({ open, post, onClose }: CommunityComment
           </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 [scrollbar-width:thin]">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 sm:px-5 [scrollbar-width:thin]">
           {isLoading ? (
             <p className="py-10 text-center text-sm text-neutral-500">Loading comments…</p>
           ) : isError ? (
@@ -629,7 +633,7 @@ export function CommunityCommentsPanel({ open, post, onClose }: CommunityComment
           )}
         </div>
 
-        <footer className="shrink-0 border-t border-neutral-100 bg-white px-4 py-3">
+        <footer className="shrink-0 border-t border-neutral-100 bg-white px-4 py-3 sm:rounded-b-3xl sm:px-5 sm:pb-4">
           {replyingTo ? (
             <div className="mb-2 flex items-center justify-between gap-2 text-xs text-neutral-600">
               <span>
@@ -658,19 +662,30 @@ export function CommunityCommentsPanel({ open, post, onClose }: CommunityComment
           ) : (
             <form onSubmit={onSubmit} className="flex items-center gap-2.5">
               <UserAvatar initial={commentAsName.slice(0, 1)} className="h-9 w-9" />
-              <label htmlFor="community-comments-input" className="sr-only">
-                {inputPlaceholder}
-              </label>
-              <input
-                id="community-comments-input"
-                ref={inputRef}
-                type="text"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder={inputPlaceholder}
-                disabled={submitting}
-                className="h-10 min-w-0 flex-1 rounded-full border-0 bg-neutral-100 px-4 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-500 focus:ring-2 focus:ring-[#FF5722]/25 disabled:opacity-50"
-              />
+              <div className="relative min-w-0 flex-1">
+                <label htmlFor="community-comments-input" className="sr-only">
+                  {inputPlaceholder}
+                </label>
+                <input
+                  id="community-comments-input"
+                  ref={inputRef}
+                  type="text"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  placeholder={inputPlaceholder}
+                  disabled={submitting}
+                  className="h-10 w-full rounded-full border-0 bg-neutral-100 py-0 pl-4 pr-12 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-500 focus:ring-2 focus:ring-[#FF5722]/25 disabled:opacity-50"
+                />
+                <button
+                  type="submit"
+                  disabled={!draft.trim() || submitting}
+                  aria-label="Send comment"
+                  className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40"
+                  style={{ backgroundColor: ACCENT }}
+                >
+                  <Send className="h-4 w-4" aria-hidden strokeWidth={2.25} />
+                </button>
+              </div>
             </form>
           )}
           {error ? (
