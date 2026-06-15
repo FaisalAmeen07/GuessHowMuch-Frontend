@@ -1,4 +1,5 @@
 import { apiRequest } from "@/api/inspector";
+import { env } from "@/config/env";
 import type {
   AdminTestResponse,
   LogoutResponse,
@@ -36,7 +37,7 @@ export async function probeBackendSession(): Promise<{
   role: string;
   userId?: string;
 } | null> {
-  const url = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000"}/api/auth/admin-test`;
+  const url = `${env.apiBaseUrl}/api/auth/admin-test`;
 
   let res: Response;
   try {
